@@ -2,6 +2,7 @@ services:
   metric-server:
     container_name: stori-challenge
     image: stori-challenge:latest
+    env_file: "stori.env"
     networks:
       - testing_net
 

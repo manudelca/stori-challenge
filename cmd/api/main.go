@@ -19,7 +19,7 @@ func main() {
 
 	// Services
 	transactionSvc := service.NewTransactionService(transactionRepo, accountInfoRepo)
-	reportSvc := service.NewReportService(report)
+	reportSvc := service.NewReportService(report, accountInfoRepo)
 
 	// Controllers
 	transactionCtrl := controller.NewTransactionController(transactionSvc)

@@ -26,22 +26,37 @@ func NewTransactionService(transactionRepo repository.TransactionRepository, acc
 func (t *transactionService) ProcessTransaction(transaction domain.Transaction) {
 	log.Printf("Processing transaction %+v", transaction)
 	accountInfo := t.accountInfoRepo.GetAccountInfo()
+	log.Printf("Processing account info %+v", accountInfo)
 	if accountInfo == nil {
-		accountInfo = &domain.AccountInfo{}
+		log.Printf("Account info not found")
+		accountInfo = &domain.AccountInfo{
+			TotalBalance: 0,
+		}
 	}
 	monthInfo := t.accountInfoRepo.GetMonthInfo(transaction.Month)
 	if monthInfo == nil {
-		monthInfo = &domain.MonthInfo{}
+		monthInfo = &domain.MonthInfo{
+			Month:                    transaction.Month,
+			TotalDebitTransactions:   0,
+			TotalCreditTransactions:  0,
+			NumberDebitTransactions:  0,
+			NumberCreditTransactions: 0,
+		}
 	}
 	switch transaction.MethodType {
 	case domain.MethodTypeDebit:
 		accountInfo.TotalBalance -= transaction.Amount
+		monthInfo.TotalDebitTransactions += transaction.Amount
+		monthInfo.NumberDebitTransactions += 1
 	case domain.MethodTypeCredit:
 		accountInfo.TotalBalance += transaction.Amount
+		monthInfo.TotalCreditTransactions += transaction.Amount
+		monthInfo.NumberCreditTransactions += 1
 	}
-	accountInfo.TotalBalance += transaction.Amount
+	log.Printf("AccountInfo: %+v", accountInfo)
+	log.Printf("MonthInfo: %+v", monthInfo)
 	t.transactionRepo.SaveTransaction(transaction)
-	t.accountInfoRepo.UpdateAccountInfo(*accountInfo)
-	t.accountInfoRepo.UpdateMonthInfo(*monthInfo)
+	t.accountInfoRepo.SaveAccountInfo(*accountInfo)
+	t.accountInfoRepo.SaveMonthInfo(*monthInfo)
 	log.Printf("Success on transaction %+v", transaction)
 }
