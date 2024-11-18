@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"time"
 
 	"github.com/manudelca/stori-challenge/internal/domain"
 	"github.com/manudelca/stori-challenge/internal/service"
@@ -49,10 +50,26 @@ func buildTransactionFromRecord(record []string) (*domain.Transaction, error) {
 	if err != nil {
 		return nil, err
 	}
+	date, dateErr := parseDate(record[1])
+	if dateErr != nil {
+		return nil, dateErr
+	}
+
 	return &domain.Transaction{
 		ID:         record[0],
-		Date:       record[1],
+		Day:        date.Day(),
+		Month:      int(date.Month()),
 		MethodType: methodType,
 		Amount:     amount,
 	}, nil
+}
+
+func parseDate(input string) (time.Time, error) {
+	layout := "1/2"
+	parsedDate, err := time.Parse(layout, input)
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	return parsedDate, nil
 }

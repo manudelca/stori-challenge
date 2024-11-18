@@ -12,15 +12,36 @@ type TransactionService interface {
 }
 
 type transactionService struct {
-	reportRepo repository.ReportRepository
+	transactionRepo repository.TransactionRepository
+	accountInfoRepo repository.AccountInfoRepository
 }
 
-func (t transactionService) ProcessTransaction(transaction domain.Transaction) {
-	log.Printf("Processing transaction %+v", transaction)
-}
-
-func NewTransactionService(reportRepo repository.ReportRepository) TransactionService {
+func NewTransactionService(transactionRepo repository.TransactionRepository, accountInfoRepo repository.AccountInfoRepository) TransactionService {
 	return &transactionService{
-		reportRepo: reportRepo,
+		transactionRepo: transactionRepo,
+		accountInfoRepo: accountInfoRepo,
 	}
+}
+
+func (t *transactionService) ProcessTransaction(transaction domain.Transaction) {
+	log.Printf("Processing transaction %+v", transaction)
+	accountInfo := t.accountInfoRepo.GetAccountInfo()
+	if accountInfo == nil {
+		accountInfo = &domain.AccountInfo{}
+	}
+	monthInfo := t.accountInfoRepo.GetMonthInfo(transaction.Month)
+	if monthInfo == nil {
+		monthInfo = &domain.MonthInfo{}
+	}
+	switch transaction.MethodType {
+	case domain.MethodTypeDebit:
+		accountInfo.TotalBalance -= transaction.Amount
+	case domain.MethodTypeCredit:
+		accountInfo.TotalBalance += transaction.Amount
+	}
+	accountInfo.TotalBalance += transaction.Amount
+	t.transactionRepo.SaveTransaction(transaction)
+	t.accountInfoRepo.UpdateAccountInfo(*accountInfo)
+	t.accountInfoRepo.UpdateMonthInfo(*monthInfo)
+	log.Printf("Success on transaction %+v", transaction)
 }

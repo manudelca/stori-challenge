@@ -9,7 +9,8 @@ const (
 
 type Transaction struct {
 	ID         string     `json:"id"`
-	Date       string     `json:"date"`
+	Day        int        `json:"day"`
+	Month      int        `json:"month"`
 	MethodType MethodType `json:"method_type"`
 	Amount     float64    `json:"amount"`
 }

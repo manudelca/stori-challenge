@@ -12,9 +12,18 @@ import (
 
 func main() {
 
+	// Repositories
 	report := repository.NewReportRepository()
-	svc := service.NewTransactionService(report)
-	ctrl := controller.NewTransactionController(svc)
+	accountInfoRepo := repository.NewAccountInfoRepository()
+	transactionRepo := repository.NewTransactionRepository()
+
+	// Services
+	transactionSvc := service.NewTransactionService(transactionRepo, accountInfoRepo)
+	reportSvc := service.NewReportService(report)
+
+	// Controllers
+	transactionCtrl := controller.NewTransactionController(transactionSvc)
+	reportConsumer := controller.NewReportConsumerController(reportSvc)
 
 	// Lo que hace AWS Stream (?
 	fileName := os.Args[1]
@@ -35,7 +44,8 @@ func main() {
 			log.Print(readErr) // Some other error
 		}
 		// Process the record (each record is a slice of strings)
-		ctrl.ProcessRecord(record)
+		transactionCtrl.ProcessRecord(record)
 	}
+	reportConsumer.SendReport()
 	log.Printf("finish")
 }
