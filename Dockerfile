@@ -1,12 +1,13 @@
-FROM golang:1.23
+FROM golang:1.23 as build
 
 WORKDIR /usr/src/app
 
-# pre-copy/cache go.mod for pre-downloading dependencies and only redownloading them in subsequent builds if they change
 COPY go.mod go.sum ./
 RUN go mod download && go mod verify
 
 COPY . .
-RUN go build -v -o /usr/local/bin/app ./cmd/api/main.go
+RUN GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -tags lambda.norpc -v -o /usr/local/bin/app ./cmd/api/main.go
 
-CMD ["app", "test.csv"]
+FROM public.ecr.aws/lambda/provided:al2
+COPY --from=build /usr/local/bin/app ./app
+ENTRYPOINT [ "./app" ]

@@ -1,7 +1,9 @@
 package controller
 
 import (
+	"context"
 	"fmt"
+	"github.com/aws/aws-lambda-go/events"
 	"log"
 	"strconv"
 	"time"
@@ -11,6 +13,8 @@ import (
 )
 
 type TransactionController interface {
+	//S3EventHandler(ctx context.Context, s3Event events.S3Event)
+	Handler(ctx context.Context, req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error)
 	ProcessRecord(record []string)
 }
 
@@ -24,6 +28,22 @@ func NewTransactionController(svc service.TransactionService) TransactionControl
 	}
 }
 
+func (t *transactionController) Handler(ctx context.Context, event events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	response := events.APIGatewayProxyResponse{
+		StatusCode: 200,
+		Body:       "\"Hello from Lambda!\"",
+	}
+	return response, nil
+}
+
+/*
+	func (t *transactionController) S3EventHandler(ctx context.Context, s3Event events.S3Event) {
+		for _, record := range s3Event.Records {
+			s3 := record.S3
+			fmt.Printf("[%s - %s] Bucket = %s, Key = %s \n", record.EventSource, record.EventTime, s3.Bucket.Name, s3.Object.Key)
+		}
+	}
+*/
 func (t *transactionController) ProcessRecord(record []string) {
 	// TODO: Skip first record
 	transaction, buildErr := buildTransactionFromRecord(record)
