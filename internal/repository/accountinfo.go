@@ -13,6 +13,8 @@ type AccountInfoRepository interface {
 }
 
 type accountInfoRepository struct {
+	// Esto viene a representar 2 storage por separado de tipo NoSQL para mayor escalabilidad
+	// (1 para el accountInfo otro para el almacenamiento de meses)
 	accountInfoStorage *domain.AccountInfo
 	MonthInfo          map[int]domain.MonthInfo
 }

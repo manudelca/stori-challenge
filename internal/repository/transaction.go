@@ -7,6 +7,7 @@ type TransactionRepository interface {
 }
 
 type transactionRepository struct {
+	// Esto viene a representar un storage. Preferentemente de tipo NoSQL para mayor escalabilidad
 	storage map[string]domain.Transaction
 }
 

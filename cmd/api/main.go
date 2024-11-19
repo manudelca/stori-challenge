@@ -25,7 +25,9 @@ func main() {
 	transactionCtrl := controller.NewTransactionController(transactionSvc)
 	reportConsumer := controller.NewReportConsumerController(reportSvc)
 
-	// Lo que hace AWS Stream (?
+	// ------- Este código viene a representar la ejecución de un Stream ---------
+	// La idea es que se suba el archivo a la nube y esto dispare un llamado contra este servicio
+	// cada cierta cantidad de bytes para ir procesando poco a poco el archivo (por simplicidad, acá se hace por línea)
 	fileName := os.Args[1]
 	file, err := os.Open(fileName)
 	if err != nil {
@@ -36,16 +38,19 @@ func main() {
 
 	csvReader := csv.NewReader(file)
 	for {
-		record, readErr := csvReader.Read() // Read one record at a time
+		record, readErr := csvReader.Read()
 		if readErr != nil {
 			if readErr.Error() == "EOF" {
-				break // End of file
+				break
 			}
-			log.Print(readErr) // Some other error
+			log.Print(readErr)
 		}
-		// Process the record (each record is a slice of strings)
+		// Este es el llamado que se haría via API/Stream
 		transactionCtrl.ProcessRecord(record)
 	}
+	// --------------------------------------------------------------
+
+	// Este llamado sería disparado una vez termina el procesamiento del archivo via cola asíncrona
 	reportConsumer.SendReport()
 	log.Printf("finish")
 }
